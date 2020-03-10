@@ -1,0 +1,9 @@
+1. Try to discriminatory of timbre
+
+2. Take 50 songs and calculate the timbre
+
+3. Take a feature vectoor on the first 3 seconds
+
+4. Run classifier to label other songs
+
+think about k-forward validation
