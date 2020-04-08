@@ -1,9 +1,9 @@
 import pandas as pd
-import plotly.express as px
 import operator
-from sklearn.utils import shuffle
+import plotly.express as px
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
+from dataset import createDataset
 
 def showGenreClusterDistribution(clusterGenreCorrelationDataframe):
     clusterDistribution = {}
@@ -49,43 +49,29 @@ def convertClustarLabels(dataframe, labelsDictionary):
     convertedDataframe = dataframe.replace(labelsDictionary)
     return convertedDataframe
 
-pd.options.mode.chained_assignment = None  # default='warn'
-
-dataset = pd.read_csv('msd_genre_dataset0.csv', header=0)
-
-classicPopAndRock = dataset.iloc[0:23895]
-punk = dataset.iloc[23895:27095]
-folk = dataset.iloc[27095:40287]
-pop = dataset.iloc[40287:41904]
-danceAndElectronica = dataset.iloc[41904:46839]
-metal = dataset.iloc[46839:48942]
-jazz = dataset.iloc[48942:53276]
-classical = dataset.iloc[53276:55150]
-hipHop = dataset.iloc[55150:55584]
-soulAndReggae = dataset.iloc[55584:59600]
+def removeTestingSongsFromDataset(dataset, sampleDataset):
+    for index, row in sampleDataset.iterrows():
+        dataset = dataset[dataset.track_id != row['track_id']]
+    return datasetMinusSamples
 
 timbreFeaturesAndGenre = ['avg_timbre1','avg_timbre2','avg_timbre3','avg_timbre4', 'avg_timbre5',
-                            'avg_timbre6','avg_timbre7','avg_timbre8', 'avg_timbre9','avg_timbre10',
-                            'avg_timbre11','avg_timbre12', 'var_timbre1', 'var_timbre2', 'var_timbre3',
-                            'var_timbre4', 'var_timbre5','var_timbre6','var_timbre7','var_timbre8',
-                            'var_timbre9','var_timbre10','var_timbre11','var_timbre12', 'genre']
+                                'avg_timbre6','avg_timbre7','avg_timbre8', 'avg_timbre9','avg_timbre10',
+                                'avg_timbre11','avg_timbre12', 'var_timbre1', 'var_timbre2', 'var_timbre3',
+                                'var_timbre4', 'var_timbre5','var_timbre6','var_timbre7','var_timbre8',
+                                'var_timbre9','var_timbre10','var_timbre11','var_timbre12', 'genre']
 
-datasetFrames = [classicPopAndRock.head(10), punk.head(10), folk.head(10), pop.head(10),
-                 danceAndElectronica.head(10), metal.head(10), jazz.head(10), classical.head(10),
-                 hipHop.head(10), soulAndReggae.head(10)]
+datasetMinusSamples, testingDataset = createDataset()
+dataSetMinusSamples = removeTestingSongsFromDataset(datasetMinusSamples, testingDataset)
+datasetMinusSamples.to_csv('testingDataSet.csv', sep='\t')
 
-datasetSample = pd.concat(datasetFrames)
-shuffledDatasetSample = shuffle(datasetSample)
-
-featureVector = shuffledDatasetSample[timbreFeaturesAndGenre]
-
+featureVector = testingDataset[timbreFeaturesAndGenre]
 kMeans = KMeans(n_clusters=10)
 timbreFeatures = timbreFeaturesAndGenre[:-1]
 kMeans.fit(featureVector[timbreFeatures])
 featureVector.loc[:, 'genre'] = kMeans.labels_
 
 genreNumbers = featureVector[['genre']]
-genreTitles = shuffledDatasetSample[['genre']]
+genreTitles = testingDataset[['genre']]
 genreNumbers['genre'] = genreNumbers['genre'].astype(str)
 
 clusterRelationshipDataframe = pd.DataFrame()
@@ -104,6 +90,6 @@ convertedFeatureDataframe = convertClustarLabels(featureVector[['genre']], clust
 for key in clusterLabelsDictionary:
     print(key, clusterLabelsDictionary[key])
 print('\n')
-confusionMatrix = pd.DataFrame(confusion_matrix(convertedFeatureDataframe[['genre']], shuffledDatasetSample[['genre']]))
+confusionMatrix = pd.DataFrame(confusion_matrix(convertedFeatureDataframe[['genre']], testingDataset[['genre']]))
 print(confusionMatrix)
 
