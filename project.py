@@ -4,6 +4,7 @@ import plotly.express as px
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
 from dataset import createDataset
+import random
 
 def showGenreClusterDistribution(clusterGenreCorrelationDataframe):
     clusterDistribution = {}
@@ -54,6 +55,45 @@ def removeTestingSongsFromDataset(dataset, sampleDataset):
         dataset = dataset[dataset.track_id != row['track_id']]
     return datasetMinusSamples
 
+def songsToRecommend(leftoverDataset, kmeans, clusteredDataset, favoriteSongIds):
+    listOfSongIndexes = []
+    dataframeWithFavoriteSongs = pd.DataFrame(columns=list(clusteredDataset))
+    favoriteSongs = pd.DataFrame(columns=list(clusteredDataset))
+    for index, row in leftoverDataset.iterrows():
+        if row['track_id'] in favoriteSongIds:
+            songIndex = leftoverDataset[leftoverDataset['track_id']==row['track_id']].index.item()
+            listOfSongIndexes.append(songIndex)
+            favoriteSongs = favoriteSongs.append(pd.Series(row, index=favoriteSongs.columns, name=songIndex))
+    totalDataframe = [clusteredDataset, favoriteSongs]
+    dataframeWithFavoriteSongs = pd.concat(totalDataframe)
+
+    features = dataframeWithFavoriteSongs[timbreFeaturesAndGenre]
+    timbreFeaturesOnly = timbreFeaturesAndGenre[:-1]
+    kmeans.fit(features[timbreFeaturesOnly])
+    features.loc[:, 'genre'] = kmeans.labels_
+
+    genreClusterLabelsToRecommend = []
+    for index, row in features.iterrows():
+        if index in listOfSongIndexes:
+            genreClusterLabelsToRecommend.append(row['genre'].astype(int))
+    
+    songsToRecommend = []
+    features.drop(features.tail(5).index,inplace=True)
+    for index, row in features.iterrows():
+        if row['genre'] in genreClusterLabelsToRecommend:
+            songsToRecommend.append(index)
+
+    recommendedSongIndexes = []
+    for i in range(5):
+        recommendedSongIndexes.append(random.choice(songsToRecommend))
+    
+    recommendedSongs = pd.DataFrame(columns = list(leftoverDataset))
+    for index, row in leftoverDataset.iterrows():
+        if index in recommendedSongIndexes:
+            recommendedSongs = recommendedSongs.append(pd.Series(row, index=recommendedSongs.columns, name=index))
+
+    return recommendedSongs[['genre', 'track_id', 'artist_name', 'title']]
+
 timbreFeaturesAndGenre = ['avg_timbre1','avg_timbre2','avg_timbre3','avg_timbre4', 'avg_timbre5',
                                 'avg_timbre6','avg_timbre7','avg_timbre8', 'avg_timbre9','avg_timbre10',
                                 'avg_timbre11','avg_timbre12', 'var_timbre1', 'var_timbre2', 'var_timbre3',
@@ -61,8 +101,9 @@ timbreFeaturesAndGenre = ['avg_timbre1','avg_timbre2','avg_timbre3','avg_timbre4
                                 'var_timbre9','var_timbre10','var_timbre11','var_timbre12', 'genre']
 
 datasetMinusSamples, testingDataset = createDataset()
-dataSetMinusSamples = removeTestingSongsFromDataset(datasetMinusSamples, testingDataset)
-datasetMinusSamples.to_csv('testingDataSet.csv', sep='\t')
+datasetMinusSamples = removeTestingSongsFromDataset(datasetMinusSamples, testingDataset)
+formattedDataset = datasetMinusSamples[['genre', 'track_id', 'artist_name', 'title', 'avg_timbre1']]
+formattedDataset.to_csv('testingDataSet.csv', sep='\t')
 
 featureVector = testingDataset[timbreFeaturesAndGenre]
 kMeans = KMeans(n_clusters=10)
@@ -93,3 +134,9 @@ print('\n')
 confusionMatrix = pd.DataFrame(confusion_matrix(convertedFeatureDataframe[['genre']], testingDataset[['genre']]))
 print(confusionMatrix)
 
+volunteerMusicDan = ['TRRWENG128F42867D8', 'TRASNUX128F425EAF2', 'TRGOMQC128F427E291', 'TRRUKPM128F42663B3', 'TRRDJKK128F147C7C2']
+volunteerMusicJohn = ['TRGPDHJ128F14527D5', 'TRJQQWN128E078F20A', 'TRIJUZX128F149BDD4', 'TRWQRUZ128F1452AC6', 'TRUPKQZ128F9306CC6']
+volunteerMusicSami = ['TRNXMNM128F427DB8C', 'TRFBQSA128F92DF83F', 'TRSBBOA128F145B794', 'TRXATRF128F4292C64', 'TRRWENG128F42867D8']
+
+recommendation = songsToRecommend(datasetMinusSamples, kMeans, testingDataset[timbreFeaturesAndGenre], volunteerMusicSami)
+recommendation.to_csv('recommendation.csv', sep='\t')

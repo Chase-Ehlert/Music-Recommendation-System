@@ -4,7 +4,7 @@ from sklearn.utils import shuffle
 def createDataset():
     pd.options.mode.chained_assignment = None  # default='warn'
 
-    dataset = pd.read_csv('msd_genre_dataset0.csv', header=0)
+    dataset = pd.read_csv('msd_genre_dataset.csv', header=0)
 
     classicPopAndRock = dataset.iloc[0:23895]
     punk = dataset.iloc[23895:27095]
