@@ -50,14 +50,14 @@ Timbre Music Recommendation System
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{abstract}
-In today’s world of social networking and smartphone technology, developing a popular app can be extremely beneficial. Music based apps are also popular leveraging how the majority of society use smartphone applications every day in their lives. A favorite feature of these music apps is to listen to “radio” stations in which the app will generate music similar to what the user already likes. Developing an efficient and successful recommendation system could levy a large user base and help to promote a music based application. This paper describes one method for developing a music recommendation system not used today in an effort to break ground in an undiscovered area. The results gathered from testing the recommendation system developed show that it will recommend music similar to what the user has chosen as favorited songs at over a $50\%$ liked rate.
+Developing an efficient and successful music recommendation system could levy a large user base and help to promote a music based application. If a new recommendation system were created from evaluating the timbre values of music, it could help to launch a unique and successful application. This paper describes one method for developing a music recommendation system not used today in an effort to break ground in an undiscovered area. The results gathered from testing the recommendation system developed, show that it will recommend music similar to what the user has chosen as favorited songs at close to a $50\%$ liked rate.
 
 \end{abstract}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{PROBLEM STATEMENT}
-The method of classifying music based on it’s timbre values is an unexplored area of research. Timbre is a method of classifying the different sounds of music. It can be described as the character of a musical note that can differentiate between different types of voices or musical instruments \cite{one}. The dataset used to develop and test both of the recommendation models detailed in this paper includes two sets of timbre values. The first set contains the average of each of the twelve timbre features measured throughout a song. The second set contains the variance of the same twelve timbre features. A combination of these 24 timbre values are used as the features for clustering the songs used in the dataset.
+\section{INTRODUCTION}
+In today’s world of social networking and smartphone technology, developing a popular app can be extremely beneficial. Music based apps are also popular leveraging how the majority of society use smartphone applications every day in their lives. A favorite feature of these music apps is to listen to “radio” stations in which the app will generate music similar to what the user already likes. The timbre features of music can provide a unique way of classifying different genres of music to find commonaliities between them. The remainder of this paper is organized as follows. Section 2 reviews the research in the field of developing and testing different music recommendation systems. Section 3 covers my approach to developing a timbre based music recommendation system and what timbre is in relation to music. Section 5 describes the setup of my recommendation system and how it was tested. Section 6 reviews the results gathered from the recommendation system developed and outlines the reasoning behind altering the initial system. Section 7 concludes the paper.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -74,13 +74,18 @@ In Bai and Kawagoe’s paper titled Background Music Recommendation System
 
 Based on User's Heart Rate and Elapsed Time develops a model based on the user’s psychosomatic condition \cite{six}. In their paper Bai and Kawagoe test how two different recommendation systems based on the user’s heart rate perform with this influence in recommending the user music. The first model called BMR-HR uses the user’s heart rate to recommend music. The second model BMR-HNE uses a combination of the user’s heart rate, music preference, and activity time to recommend music. A third model is used which will recommend random music from a selection of music. The models were tested by the users rating the recommended songs on a 1 - 5 scale and an appropriate rate which was measured by the number of liked songs against the total number of songs. After testing the performance of all three models, BMR-HR model was the most favored, the random selection was the least favored, and both BMR-HR and BMR-HNE appropriate rates were discovered to not be practical.
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{APPROACH}
+% Describe the proposed solution to address the problem. This is the most important section. Be concrete and clear. Use of diagrams help organize the approach and improve understanding. Every diagram must be explained in text before the diagram
+The method of classifying music based on it’s timbre values is an unexplored area of research. Timbre is a method of classifying the different sounds of music. It can be described as the character of a musical note that can differentiate between different types of voices or musical instruments \cite{one}. The dataset used to develop and test both of the recommendation models detailed in this paper includes two sets of timbre values. The first set contains the average of each of the twelve timbre features measured throughout a song. The second set contains the variance of the same twelve timbre features. A combination of these 24 timbre values are used as the features for clustering the songs used in the dataset.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{EXPERIMENTAL SETUP}
 The first timbre based recommendation model created uses music taken from every genre in the dataset to use for clustering and will be referred to as model X. It begins by finding the indexes of the liked songs submitted by a user to reference in the KMeans clustered dataset later on. This is done to find out later which clusters the liked songs have ended up in, as with how I handle the dataset that will be the only way to follow the liked songs. After collecting the indexes of user-liked songs the model will then join them in a dataframe with 100 other songs made up of ten songs for ten different genres. These songs were not in the dataset of songs the user had a choice to pick from. This dataframe of songs is then clustered by KMeans clustering to a factor of ten clusters. The aim with clustering the songs in this manner is to evaluate how effective measuring music by its associated timbre features will cluster separately. Then after the clusters have been created the model will collect the cluster labels for the clusters that contain the liked songs. Next the model will collect five songs to recommend to the user by removing the liked songs from the dataframe and collecting every song in each of the clusters collected. The model will then pick at random from this list to recommend songs to the user, I tested this model out on three volunteers. This method of recommending songs did not prove to be useful, which will be detailed later in the results section. I altered the model in hopes to increase its effectiveness at recommending music to users that they would like to listen to, this model will be referred to as model Y. This alteration is focused on including only the genres of music the user liked to use for clustering. The changes to the model include evaluating what genre the songs liked by the user belong to. Then the model will collect all music that is tagged with this genre in the dataset. This collection of music is then combined with the liked songs and KMeans clustered by four different factors: 10, 20, 40, and 80. After the songs have been clustered the model will then collect the cluster labels of each cluster the liked songs were placed in and a song is chosen at random from these clusters to recommend.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \section{RESULTS}
 Three volunteers were used to test both music recommendation models created. To test the models the users chose five songs they liked from the initial dataset and five songs were then recommended based off of these seeds. The three users (to be referred to as A, B, and C) provided the results for the effectiveness of model X in Figure 1. After determining that model X was not at least $50\%$ effective at recommending songs the user will like, the model was then altered in an effort to increase the effectiveness of a timbre based recommendation system. The same seeds used for model X from the three users were then used in model Y to generate the results shown in Figure 2.
@@ -110,7 +115,7 @@ Future Work: Model Y did prove to increase the likelihood of a user liking the r
 % TODO - Write after completing results section
 
 Model Y did prove to increase the likelihood of a user liking the recommended songs given but it still did not break an average of a $50\%$ like rate among the users tested. I would not define this as successful unfortunately. With model Y leveraging the best results a different approach could be applied to see if a higher success rate can be achieved. Instead of using both sets of average and variance timbre values, the sets could be tested individually to see if it helps. If that theory does not increase the like rate of the recommended songs, then maybe recommending music based on timbre values does not yield the best solution.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \addtolength{\textheight}{-12cm}   % This command serves to balance the column lengths
                                   % on the last page of the document manually. It shortens
@@ -125,13 +130,13 @@ Model Y did prove to increase the likelihood of a user liking the recommended so
 % Appendixes should appear before the acknowledgment.
 % Optional
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % \section*{ACKNOWLEDGMENT}
 % Put sponsor acknowledgments in the unnumbered footnote on the first page.
 % Optional
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \begin{thebibliography}{99}
 
