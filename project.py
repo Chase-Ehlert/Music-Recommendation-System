@@ -1,6 +1,5 @@
 import pandas as pd
 import operator
-import plotly.express as px
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
 from dataset import createDataset
@@ -94,11 +93,71 @@ def songsToRecommend(leftoverDataset, kmeans, clusteredDataset, favoriteSongIds)
 
     return recommendedSongs[['genre', 'track_id', 'artist_name', 'title']]
 
+def refinedSongsToRecommend(leftoverDataset, kmeans, clusteredDataset, favoriteSongIds):
+    listOfSongGenres = []
+    listOfSongIndexes = []
+    favoriteSongsByGenre = pd.DataFrame(columns=list(leftoverDataset))
+    dataframeWithFavoriteGenresAndSongs = pd.DataFrame(columns=list(leftoverDataset))
+    for index, row in leftoverDataset.iterrows():
+        if row['track_id'] in favoriteSongIds:
+            songIndex = leftoverDataset[leftoverDataset['track_id']==row['track_id']].index.item()
+            listOfSongIndexes.append(songIndex)
+            listOfSongGenres.append(row['genre'])
+
+    listOfSongGenres = list(set(listOfSongGenres))
+    favoriteSongsByGenreList = []
+    for index, row in leftoverDataset.iterrows():
+        if row['genre'] in listOfSongGenres:
+            favoriteSongsByGenreList.append(row)
+    favoriteSongsByGenre = pd.DataFrame.from_dict(favoriteSongsByGenreList)
+
+    totalDataframe = [clusteredDataset, favoriteSongsByGenre]
+    dataframeWithFavoriteGenresAndSongs = pd.concat(totalDataframe)
+
+    features = dataframeWithFavoriteGenresAndSongs[timbreFeaturesAndGenre]
+    timbreFeaturesOnly = timbreFeaturesAndGenre[:-2]
+    kmeans.fit(features[timbreFeaturesOnly])
+    features.loc[:, 'genre'] = kmeans.labels_
+
+    genreClusterLabelsToRecommend = []
+    for index, row in features.iterrows():
+        if index in listOfSongIndexes:
+            genreClusterLabelsToRecommend.append(row['genre'])
+    genreClusterLabelsToRecommend = list(set(genreClusterLabelsToRecommend))
+    print('GENRE', genreClusterLabelsToRecommend)
+    
+    songsToRecommend = {}
+    songList = []
+    features.drop(features.tail(5).index,inplace=True)
+    for clusterLabel in genreClusterLabelsToRecommend:
+        for index, row in features.iterrows():
+            if row['genre'] == clusterLabel:
+                songList.append(row['track_id'])
+        songsToRecommend[clusterLabel] = songList
+
+    recommendedSongIndexes = []
+    while len(recommendedSongIndexes) < 5:
+        for clusterLabel in genreClusterLabelsToRecommend:
+            if len(recommendedSongIndexes) == 5:
+                break
+            else:
+                songList = songsToRecommend[clusterLabel]
+                recommendedSongIndexes.append(random.choice(songList))
+    print('INDEXES', recommendedSongIndexes)
+    
+    recommendedSongs = pd.DataFrame(columns = list(leftoverDataset))
+
+    for index, row in leftoverDataset.iterrows():
+        if row['track_id'] in recommendedSongIndexes:
+            recommendedSongs = recommendedSongs.append(pd.Series(row, index=recommendedSongs.columns, name=index))
+
+    return recommendedSongs[['genre', 'track_id', 'artist_name', 'title']]
+
 timbreFeaturesAndGenre = ['avg_timbre1','avg_timbre2','avg_timbre3','avg_timbre4', 'avg_timbre5',
                                 'avg_timbre6','avg_timbre7','avg_timbre8', 'avg_timbre9','avg_timbre10',
                                 'avg_timbre11','avg_timbre12', 'var_timbre1', 'var_timbre2', 'var_timbre3',
                                 'var_timbre4', 'var_timbre5','var_timbre6','var_timbre7','var_timbre8',
-                                'var_timbre9','var_timbre10','var_timbre11','var_timbre12', 'genre']
+                                'var_timbre9','var_timbre10','var_timbre11','var_timbre12', 'track_id', 'genre']
 
 datasetMinusSamples, testingDataset = createDataset()
 datasetMinusSamples = removeTestingSongsFromDataset(datasetMinusSamples, testingDataset)
@@ -107,7 +166,7 @@ formattedDataset.to_csv('testingDataSet.csv', sep='\t')
 
 featureVector = testingDataset[timbreFeaturesAndGenre]
 kMeans = KMeans(n_clusters=10)
-timbreFeatures = timbreFeaturesAndGenre[:-1]
+timbreFeatures = timbreFeaturesAndGenre[:-2]
 kMeans.fit(featureVector[timbreFeatures])
 featureVector.loc[:, 'genre'] = kMeans.labels_
 
@@ -128,15 +187,20 @@ clusterLabelsDictionary = createClusterLabels(clusterDistribution)
 
 convertedFeatureDataframe = convertClustarLabels(featureVector[['genre']], clusterLabelsDictionary)
 
+print('\n')
 for key in clusterLabelsDictionary:
     print(key, clusterLabelsDictionary[key])
 print('\n')
 confusionMatrix = pd.DataFrame(confusion_matrix(convertedFeatureDataframe[['genre']], testingDataset[['genre']]))
-print(confusionMatrix)
+print(confusionMatrix, '\n')
 
 volunteerMusicDan = ['TRRWENG128F42867D8', 'TRASNUX128F425EAF2', 'TRGOMQC128F427E291', 'TRRUKPM128F42663B3', 'TRRDJKK128F147C7C2']
 volunteerMusicJohn = ['TRGPDHJ128F14527D5', 'TRJQQWN128E078F20A', 'TRIJUZX128F149BDD4', 'TRWQRUZ128F1452AC6', 'TRUPKQZ128F9306CC6']
 volunteerMusicSami = ['TRNXMNM128F427DB8C', 'TRFBQSA128F92DF83F', 'TRSBBOA128F145B794', 'TRXATRF128F4292C64', 'TRRWENG128F42867D8']
 
-recommendation = songsToRecommend(datasetMinusSamples, kMeans, testingDataset[timbreFeaturesAndGenre], volunteerMusicSami)
+# recommendation = songsToRecommend(datasetMinusSamples, kMeans, testingDataset[timbreFeaturesAndGenre], volunteerMusicSami)
+# recommendation.to_csv('recommendation.csv', sep='\t')
+
+kMeans = KMeans(n_clusters=40)
+recommendation = refinedSongsToRecommend(datasetMinusSamples, kMeans, testingDataset[timbreFeaturesAndGenre], volunteerMusicDan)
 recommendation.to_csv('recommendation.csv', sep='\t')
