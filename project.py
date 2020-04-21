@@ -1,9 +1,9 @@
 import pandas as pd
 import operator
+import random
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
 from dataset import createDataset
-import random
 
 def showGenreClusterDistribution(clusterGenreCorrelationDataframe):
     clusterDistribution = {}
